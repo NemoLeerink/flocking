@@ -10,15 +10,22 @@ to Setup
   reset-ticks
 end
 to Lopen
-  [set stapgrootte 0.7 + random-float 0.6]
+  ;;[set stapgrootte 0.7 + random-float 0.6]
 
   ask turtles [
 
     move-to patch-ahead stapgrootte
-  ]]
+  ]
 
   tick
 
+end
+to teken [c]
+  if mouse-down? [
+    ask patch mouse-xcor mouse-ycor [
+      set pcolor c
+    ]
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -90,6 +97,23 @@ BUTTON
 Setup
 Setup
 NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+113
+91
+211
+124
+teken blauw
+teken [sky]
+T
 1
 T
 OBSERVER
