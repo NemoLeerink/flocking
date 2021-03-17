@@ -1,34 +1,113 @@
-patches-own [stapgrootte]
+patches-own [state visits]
+globals [ colours ... instruction-tabel input rand] ;;
+extensions [ table ]
+
 to Setup
+
   clear-all
-  create-turtles 150 ;; creates turtles
-  [
-    set shape "circle" ;; maakt dat de turtle er uit ziet als een mier
-    set heading 0 ;; kijkt naar het noorden
-    set color yellow ;; maakt turtle zwart
+
+  set instruction-tabel table:from-list [
+    ["Langton's ant" "RL"]
+    ["Still chaos after 1.000.000 steps" "RLR"]
+    ["Immediately a simple highway" "LLR"]
+    ["A straight highway to the right" "RRLLLRRRLRRR"]
+    ["A broad highway, 45 degrees" "RRLRLLRLRR"]
+    ["568.000 steps before highway emerges" "LLLLLLRRLRRR"]
+    ["A highway that is not a multiple of 45 degrees" "RLRLRLLRLR"]
+    ["A curvy highway to the left" "LLRRRLRLRLLR"]
+    ["Some way to fill a sector" "RRLRLRR"]
+    ["Some other way to fill a sector" "RRLLLRLLLRRR"]
+    ["White upper cone filler" "RRLLLRRRRRLR"]
+    ["Left lower plane filler" "RRLRLLRRRRRR"]
+    ["Some way to fill the whole plane" "RRLRR"]
+    ["Fill the whole plane, connect with highways" "LRRRRRLLR"]
+    ["Fill the whole plane, with spiraling highway" "LRRRRLLLRRR"]
+    ["Your brain (from above)" "LLRR"]
+    ["Your brain (from above), connected to an IC" "RLLR"]
+    ["Professor's brain (from above)" "LLLLLLRRRRRR"]
+    ["Professor's brain connected to an IC" "RRRLLLLLLRRR"]
+    ["Complicated construction" "RRRRLRRRLLRR"]
+    ["Biffled highway" "RLLLLRRRLLLR"]
+    ["Overheating reactor" "RRLRLLLRRRR"]
+    ["Extending square domain" "LLRLLLRRRRR"]
+    ["Persian carpet" "LRLRLLLLLLLR"]
+    ["Other carpet (skew)" "LLRRLRRRRRRR"]
   ]
+
+  set colours [ white red lime cyan yellow 126 3 brown 52 blue 43 124 ]
+
+  ask patches [ set state 0 set pcolor gray set visits 0] ;; kleur van de patches is in het begin grijs, oftewel onbezocht
+
+  ifelse (length Gedrag > 0)
+    [if not (2 <= length Gedrag and length Gedrag <= 12) [error "Invalid input"]] ;; geeft error als de gebruiker te veel of te weinig karakters invoert
+    [set Gedrag table:get instruction-tabel kiezer ] ;; gedrag wordt gelijk aan element uit de lijst
+
+  create-turtles 1 ;; creates turtle
+  [
+    set size 3  ;; make it easier to see
+    set shape "bug" ;; maakt dat de turtle er uit ziet als een mier
+    set heading 0 ;; kijkt naar het noorden
+    set color black ;; maakt turtle zwart
+  ]
+
+  ask patch 0 0 [ask patches in-radius radius [
+    set rand random-float 1 if (rand < Kans) [set state staat - 1 set pcolor item state colours]]
+  ] ; Vraag aan centrale patch om in een radius de state te veranderen als de kans groter is dan een wilekeurige float
   reset-ticks
+
+
 end
+
+to kleuren ;; geeft kleur aan de patches nav. het aantal keren dat de ant er geweest is
+  ask patches[
+    ifelse (visits = 0)
+    [set pcolor sky] ;; blauw als ant er niet geweest is
+    [set pcolor scale-color red visits 0 50 ]] ;; anders roodtint
+
+end
+
 to Lopen
-  [set stapgrootte 0.7 + random-float 0.6]
+
+  if any? turtles with [ patch-ahead 1 = nobody ] [if (Heatmap) [kleuren] stop] ;; stopt als turtle aan de rand is en teken heatmap
 
   ask turtles [
 
-    move-to patch-ahead stapgrootte
-  ]]
+    move-to patch-ahead 1
+
+    ifelse (item state Gedrag = "R") ;; als er een R staat naar rechts anders links. Hoek kan worden aangepast door slider
+    [set heading heading + Hoek-R]
+    [set heading heading + Hoek-L]
+
+    set pcolor item state colours ;; kleur patches naar aanleiding van de state waar ze in zijn
+
+    ifelse (state < length Gedrag - 1) ;; Lenght geeft aantal karakters terug, maar state indexeerd vanaf 0
+    [set state state + 1] ;; het vakje is bezocht
+    [set state 0]
+    set visits visits + 1 ;; het vakje is bezocht
+
+  ]
 
   tick
 
 end
+
+to Willekeurig
+  let random-length 2 + random 10 ;; geeft random RL waarde, groter dan twee en kleiner dan 12
+  set Gedrag reduce word n-values random-length [ one-of ["L" "R"] ] ;; Zet gedrag gelijk aan een string van L en R. Reduce word maakt van de lijst met R en L een string
+end
+
+to Leeg
+  set Gedrag "" ;; reset invoer gedrag
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
+235
 10
-647
-448
+805
+581
 -1
 -1
-13.0
+2.0
 1
 10
 1
@@ -38,10 +117,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--16
-16
--16
-16
+-140
+140
+-140
+140
 0
 0
 1
@@ -49,27 +128,55 @@ ticks
 30.0
 
 BUTTON
-13
-18
-78
-51
+10
+10
+74
+43
+Setup
+Setup\n
+NIL
+1
+T
+OBSERVER
+NIL
+X
+NIL
+NIL
+1
+
+INPUTBOX
+10
+105
+123
+175
+Gedrag
+LLRRLRRRRRRR
+1
+0
+String
+
+BUTTON
+150
+10
+215
+43
 Lopen
-Lopen
+Lopen\n
 T
 1
 T
 OBSERVER
 NIL
-NIL
+L
 NIL
 NIL
 0
 
 BUTTON
-101
-23
-164
-56
+80
+10
+143
+43
 Stap
 Lopen
 NIL
@@ -77,18 +184,158 @@ NIL
 T
 OBSERVER
 NIL
-NIL
+S
 NIL
 NIL
 1
 
+CHOOSER
+10
+195
+184
+240
+Kiezer
+Kiezer
+"Langton's ant" "Still chaos after 1.000.000 steps" "Immediately a simple highway" "A straight highway to the right" "A broad highway, 45 degrees" "568.000 steps before highway emerges" "A highway that is not a multiple of 45 degrees" "A curvy highway to the left" "Some way to fill a sector" "Some other way to fill a sector" "White upper cone filler" "Left lower plane filler" "Some way to fill the whole plane" "Fill the whole plane, connect with highways" "Fill the whole plane, with spiraling highway" "Your brain (from above)" "Your brain (from above), connected to an IC" "Professor's brain (from above)" "Professor's brain connected to an IC" "Complicated construction" "Biffled highway" "Overheating reactor" "Extending square domain" "Persian carpet" "Other carpet (skew)"
+24
+
 BUTTON
-21
-79
-85
-112
-Setup
-Setup
+130
+145
+220
+178
+Willekeurig
+Willekeurig
+NIL
+1
+T
+OBSERVER
+NIL
+R
+NIL
+NIL
+1
+
+TEXTBOX
+10
+70
+115
+98
+Laat leeg om de kiezer te gebruiken.
+11
+0.0
+1
+
+BUTTON
+130
+105
+220
+138
+Leeg
+Leeg
+NIL
+1
+T
+OBSERVER
+NIL
+L
+NIL
+NIL
+1
+
+SLIDER
+10
+255
+182
+288
+Radius
+Radius
+0
+100
+0.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+305
+182
+338
+Staat
+Staat
+1
+length Gedrag
+1.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+355
+182
+388
+Kans
+Kans
+0
+1
+0.0
+0.01
+1
+NIL
+HORIZONTAL
+
+SWITCH
+80
+405
+182
+438
+Heatmap
+Heatmap
+1
+1
+-1000
+
+SLIDER
+10
+455
+182
+488
+Hoek-L
+Hoek-L
+-315
+315
+-90.0
+45
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+505
+182
+538
+Hoek-R
+Hoek-R
+-360
+360
+90.0
+45
+1
+NIL
+HORIZONTAL
+
+BUTTON
+80
+555
+182
+588
+Default hoek
+set Hoek-R 90\nset Hoek-L -90
 NIL
 1
 T
@@ -102,39 +349,25 @@ NIL
 @#$#@#$#@
 ## WHAT IS IT?
 
-(a general understanding of what the model is trying to show or explain)
+Dit programma is een versie van Langton's ant. Het heeft wel uitbreidingen, zo kan de gebruiker zelf bepalen welke commando's de ant krijgt, en zijn er meer dan twee states, namelijk maximaal 12.
 
 ## HOW IT WORKS
 
-(what rules the agents use to create the overall behavior of the model)
+Door in commando's in te geven in de vorm van R of L vertoont de ant bepaald gedrag. Staat er op de 1e plek in de string een L dan gaat de ant naar links (of een door gebruiker gekozen hoek). Staat er een R op de 2e plek, dan gaat de ant naar rechts (of door gebruiker gekozen hoek) als hij een patch met state 2 aantreft enz. 
 
-## HOW TO USE IT
+Dit gaat door tot maximaal state 12. Bij het verlaten van de patch verhoogt de state met 1. Omdat de states gekoppeld zijn aan kleuren verandert hiermee ook de kleur. De gebruiker kan ook kiezen uit een staandaard aantal opties van LR strings om bepaalde vormen te krijgen.
 
-(how to use the model, including a description of each of the items in the Interface tab)
+## EXTRA'S
 
-## THINGS TO NOTICE
+<<<<<<< HEAD
+Ook is het voor de gebruiker mogelijk om de patches al andere startwaardes te geven dan 0. Dit in een ook door de gebruiker aan te passen radius en gekozen kans. Hierdoor vertoont de ant weer heel ander gedrag. De kans geeft aan hoe groot de kans is dat een startwaarde niet gelijk is aan 0.
+=======
+Daarbij kan ook de hoek waarin de mier loopt aangepast worden, voor zowel het commando L als het commando R. Ook dit maakt dat de mier weer ander gedrag vertoond en er een ander patroon onstaat. Wil de je gebruik maken van de standaard figuren die beschikbaar zijn, dan moet je de slider laten staan in zijn beginstand.
+>>>>>>> Werkend
 
-(suggested things for the user to notice while running the model)
+Verder kan de gebruiker de heatmap aanzetten, wat er voor zorgt dat zodra de ant gestopt is (oftewel hij bij een rand gekomen is) alle patches een rood- wittind krijgen gebaseerd op het aantal keren dat de ant er geweest is. Als de ant er niet geweest is wordt de patch blauw.
 
-## THINGS TO TRY
-
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
-
-## EXTENDING THE MODEL
-
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
-
-## NETLOGO FEATURES
-
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
-
-## RELATED MODELS
-
-(models in the NetLogo Models Library and elsewhere which are of related interest)
-
-## CREDITS AND REFERENCES
-
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+Daarbij kan ook de hoek waarin de mier loopt aangepast worden, voor zowel het commando L als het commando R. Ook dit maakt dat de mier weer ander gedrag vertoond en er een ander patroon onstaat. Wil de je gebruik maken van de standaard figuren die beschikbaar zijn, dan moet je de slider laten staan in zijn beginstand.
 @#$#@#$#@
 default
 true
@@ -458,5 +691,5 @@ true
 Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 @#$#@#$#@
-0
+1
 @#$#@#$#@

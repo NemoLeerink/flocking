@@ -10,7 +10,7 @@ to Setup
   reset-ticks
 end
 to Lopen
-  [set stapgrootte 0.7 + random-float 0.6]
+  [set stapgrootte [0.7 + random-float 0.6]
 
   ask turtles [
 
