@@ -1,31 +1,90 @@
-patches-own [stapgrootte]
+globals [
+  current-nmr-turtles
+  max-nrm-turtles
+
+  patches-groen ; Start positie
+  patches-zwart ; Leeg
+  patches-sky ; Muren
+  patches-rood ; Het doel
+
+  bewandelbaar ; De patches die geen muur zijn
+
+  mean-step-size
+  collision-radius
+  field-of-view
+  length-of-left-bar
+]
+
+turtles-own [speed]
+patches-own [afstand]
+
 to Setup
   clear-all
-  create-turtles 150 ;; creates turtles
+  defaults
+
+  ;set max-nrm-turtles 10
+  set current-nmr-turtles 0
+
+  create-turtles max-nrm-turtles - current-nmr-turtles ;; creates turtles
   [
     set shape "circle" ;; maakt dat de turtle er uit ziet als een mier
-    set heading 0 ;; kijkt naar het noorden
     set color yellow ;; maakt turtle zwart
+    set speed 0.7 + random-float 0.6
+    move-to one-of patches-groen
+
   ]
+;  set current-nmr-turtles max-nrm-turtles
   reset-ticks
 end
+
 to Lopen
-  ;;[set stapgrootte 0.7 + random-float 0.6]
 
   ask turtles [
-
-    move-to patch-ahead stapgrootte
+    forward speed
   ]
-
   tick
-
 end
+
 to teken [c]
   if mouse-down? [
     ask patch mouse-xcor mouse-ycor [
       set pcolor c
     ]
   ]
+end
+
+to defaults
+  set max-nrm-turtles     10 ; moet 150 worden
+  set mean-step-size      0.35
+  set collision-radius    1.1
+  set field-of-view       1.1
+  set length-of-left-bar  7
+  ;
+  ask box -14   9  -9  14 [ set pcolor green ]
+  ask box  10 -16  16 -10 [ set pcolor red   ]
+  ask box  (0 - length-of-left-bar)
+                0   0   0 [ set pcolor sky   ]
+  ask box   3   0  16   0 [ set pcolor sky   ]
+  ask box   3  -5   3   0 [ set pcolor sky   ]
+
+  set patches-groen box -14   9  -9  14
+  set patches-rood box  10 -16  16 -10
+;  set patches-sky box  (0 - length-of-left-bar)
+;                0   0   0 and box   3   0  16   0
+
+  ;patches-zwart
+;  ask patches
+;  [
+;    if pcolor = sky [set patches-sky patches-sky + mysel]
+;  ]
+
+
+
+end
+
+to-report box [ left-x left-y right-x right-y ]
+  report patches with [left-x <= pxcor and pxcor <= right-x and
+                       left-y <= pycor and pycor <= right-y ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -42,8 +101,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-0
-0
+1
+1
 1
 -16
 16
@@ -112,7 +171,7 @@ BUTTON
 211
 124
 teken blauw
-teken [sky]
+teken sky
 T
 1
 T

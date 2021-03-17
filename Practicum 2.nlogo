@@ -1,25 +1,43 @@
-patches-own [stapgrootte]
+globals [
+  current-nmr-turtles
+  max-nrm-turtles
+
+  patches-groen ; Start positie
+  patches-zwart ; Leeg
+  patches-sky ; Muren
+  patches-rood ; Het doel
+
+  bewandelbaar ; De patches die geen muur zijn
+]
+
+turtles-own [speed]
+patches-own [afstand]
+
 to Setup
   clear-all
-  create-turtles 150 ;; creates turtles
+
+  set max-nrm-turtles 150
+  set current-nmr-turtles 0
+
+  create-turtles max-nrm-turtles - current-nmr-turtles ;; creates turtles
   [
     set shape "circle" ;; maakt dat de turtle er uit ziet als een mier
-    set heading 0 ;; kijkt naar het noorden
     set color yellow ;; maakt turtle zwart
+    set speed 0.7 + random-float 0.6
+    move-to one-of patches
+
   ]
   reset-ticks
 end
+
 to Lopen
-  ;;[set stapgrootte 0.7 + random-float 0.6]
 
   ask turtles [
-
-    move-to patch-ahead stapgrootte
+    move-to patch-ahead speed
   ]
-
   tick
-
 end
+
 to teken [c]
   if mouse-down? [
     ask patch mouse-xcor mouse-ycor [
@@ -42,8 +60,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-0
-0
+1
+1
 1
 -16
 16
@@ -112,7 +130,7 @@ BUTTON
 211
 124
 teken blauw
-teken [sky]
+teken sky
 T
 1
 T
