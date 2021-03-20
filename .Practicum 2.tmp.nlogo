@@ -8,11 +8,6 @@ globals [
   patches-rood ; Het doel
 
   bewandelbaar ; De patches die geen muur zijn
-
-  mean-step-size
-  collision-radius
-  field-of-view
-  length-of-left-bar
 ]
 
 turtles-own [speed]
@@ -20,9 +15,8 @@ patches-own [afstand]
 
 to Setup
   clear-all
-  defaults
 
-  ;set max-nrm-turtles 10
+  set max-nrm-turtles 150
   set current-nmr-turtles 0
 
   create-turtles max-nrm-turtles - current-nmr-turtles ;; creates turtles
@@ -30,19 +24,23 @@ to Setup
     set shape "circle" ;; maakt dat de turtle er uit ziet als een mier
     set color yellow ;; maakt turtle zwart
     set speed 0.7 + random-float 0.6
-    move-to one-of patches-groen
+    move-to one-of patches
+
 
   ]
-;  set current-nmr-turtles max-nrm-turtles
   reset-ticks
 end
 
 to Lopen
 
+
   ask turtles [
-    forward speed
+    if patch-ahead 1 = sky [back 1]
+
+    [move-to patch-ahead speed]
   ]
-  tick
+    tick
+
 end
 
 to teken [c]
@@ -51,40 +49,6 @@ to teken [c]
       set pcolor c
     ]
   ]
-end
-
-to defaults
-  set max-nrm-turtles     10 ; moet 150 worden
-  set mean-step-size      0.35
-  set collision-radius    1.1
-  set field-of-view       1.1
-  set length-of-left-bar  7
-  ;
-  ask box -14   9  -9  14 [ set pcolor green ]
-  ask box  10 -16  16 -10 [ set pcolor red   ]
-  ask box  (0 - length-of-left-bar)
-                0   0   0 [ set pcolor sky   ]
-  ask box   3   0  16   0 [ set pcolor sky   ]
-  ask box   3  -5   3   0 [ set pcolor sky   ]
-
-  set patches-groen box -14   9  -9  14
-  set patches-rood box  10 -16  16 -10
-;  set patches-sky box  (0 - length-of-left-bar)
-;                0   0   0 and box   3   0  16   0
-
-  ;patches-zwart
-;  ask patches
-;  [
-;    if pcolor = sky [set patches-sky patches-sky + mysel]
-;  ]
-
-
-
-end
-
-to-report box [ left-x left-y right-x right-y ]
-  report patches with [left-x <= pxcor and pxcor <= right-x and
-                       left-y <= pycor and pycor <= right-y ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -115,10 +79,10 @@ ticks
 30.0
 
 BUTTON
-13
-18
-78
-51
+19
+21
+84
+54
 Lopen
 Lopen
 T
@@ -166,12 +130,46 @@ NIL
 1
 
 BUTTON
-113
-91
-211
-124
+24
+217
+122
+250
 teken blauw
 teken sky
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+22
+129
+120
+162
+teken groen
+teken green
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+23
+175
+115
+208
+teken rood
+teken red
 T
 1
 T

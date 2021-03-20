@@ -26,16 +26,21 @@ to Setup
     set speed 0.7 + random-float 0.6
     move-to one-of patches
 
+
   ]
   reset-ticks
 end
 
 to Lopen
 
+
   ask turtles [
-    move-to patch-ahead speed
+    ifelse patch-ahead 1 = sky [[back 1]
+      face one-of patches with [pcolor = red]]
+    [move-to patch-ahead speed]
   ]
-  tick
+    tick
+
 end
 
 to teken [c]
@@ -74,10 +79,10 @@ ticks
 30.0
 
 BUTTON
-13
-18
-78
-51
+19
+21
+84
+54
 Lopen
 Lopen
 T
@@ -125,12 +130,46 @@ NIL
 1
 
 BUTTON
-113
-91
-211
-124
+24
+217
+122
+250
 teken blauw
 teken sky
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+22
+129
+120
+162
+teken groen
+teken green
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+23
+175
+115
+208
+teken rood
+teken red
 T
 1
 T
