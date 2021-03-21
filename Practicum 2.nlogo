@@ -1,10 +1,10 @@
 globals [
   current-nmr-turtles
-  max-nrm-turtles
+  ;max-nrm-turtles
 
-  mean-step-size
-  collision-radius
-  field-of-view
+  ;mean-step-size
+  ;collision-radius
+  ;field-of-view
   length-of-left-bar
 
   episode-duratie ; eens in de x aantal ticks worden de afstanden opnieuw berekend
@@ -129,28 +129,10 @@ to kortste-afstand
     ]
   ]
 
-  ; onderstaande code had ik geschreven, maar die snippet bleek het efficienter te doen. Ik laat het voor nu nog ff staan
-  ;  let kortste world-width ^ 2 + world-height ^ 2 ;
-;
-;  ask bewandelbaar [ ; voor alle bewandelbare patches willen we de afstand tot de dichtstbijzijnde patch weten
-;    ask patches-rood [ ;ask patches with [pcolor = red][
-;      let temp manhattan ([pxcor] of myself) ([pycor] of myself) pxcor pycor
-;      if temp < kortste [set kortste temp]
-;    ]
-;
-;    set afstand kortste
-;  ]
-
-end
-
-;; methode wordt wss overbodig
-to-report manhattan [p1x p1y p2x p2y] ;; gebruikt om manhattan afstand tussen twee punten te vinden
-  report abs(p1x - p2x) + abs(p1y - p2y)
-
 end
 
 to defaults
-  set max-nrm-turtles     10 ; moet 150 worden
+  set max-nrm-turtles     150
   set mean-step-size      0.35
   set collision-radius    1.1
   set field-of-view       180
@@ -332,6 +314,83 @@ Standaard-waarde
 0
 1
 -1000
+
+SLIDER
+35
+300
+207
+333
+field-of-view
+field-of-view
+0
+360
+180.0
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+75
+10
+140
+43
+Defaults
+defaults
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+35
+340
+207
+373
+collision-radius
+collision-radius
+0
+5
+1.1
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+35
+380
+207
+413
+mean-step-size
+mean-step-size
+0
+1
+0.35
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+35
+420
+207
+453
+max-nrm-turtles
+max-nrm-turtles
+0
+150
+10.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
