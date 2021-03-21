@@ -60,6 +60,7 @@ to Lopen
       die]
   ]
 
+  show current-nmr-
   turtles-maken
 
   tick
