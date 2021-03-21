@@ -2,6 +2,11 @@ globals [
   current-nmr-turtles
   max-nrm-turtles
 
+  mean-step-size
+  collision-radius
+  field-of-view
+  length-of-left-bar
+
   patches-groen ; Start positie
   patches-zwart ; Leeg
   patches-sky ; Muren
@@ -15,8 +20,10 @@ patches-own [afstand]
 
 to Setup
   clear-all
+  reset-ticks
 
-  set max-nrm-turtles 150
+  defaults
+
   set current-nmr-turtles 0
 
   create-turtles max-nrm-turtles - current-nmr-turtles ;; creates turtles
@@ -24,21 +31,21 @@ to Setup
     set shape "circle" ;; maakt dat de turtle er uit ziet als een mier
     set color yellow ;; maakt turtle zwart
     set speed 0.7 + random-float 0.6
-    move-to one-of patches
-
-
+    move-to one-of patches-groen
   ]
-  reset-ticks
+
+  ;; set current-nmr-turtles max-nrm-turtles
+
 end
 
 to Lopen
 
 
-  ask turtles [
-    ifelse patch-ahead 1 = sky [[back 1]
-      face one-of patches with [pcolor = red]]
-    [move-to patch-ahead speed]
-  ]
+;  ask turtles [
+;    ifelse patch-ahead 1 = sky [[back 1]
+;      face one-of patches with [pcolor = red]]
+;    [move-to patch-ahead speed]
+;  ]
     tick
 
 end
@@ -49,6 +56,40 @@ to teken [c]
       set pcolor c
     ]
   ]
+end
+
+to defaults
+  set max-nrm-turtles     10 ; moet 150 worden
+  set mean-step-size      0.35
+  set collision-radius    1.1
+  set field-of-view       1.1
+  set length-of-left-bar  7
+  ;
+  ask box -14   9  -9  14 [ set pcolor green ]
+  ask box  10 -16  16 -10 [ set pcolor red   ]
+  ask box  (0 - length-of-left-bar)
+                0   0   0 [ set pcolor sky   ]
+  ask box   3   0  16   0 [ set pcolor sky   ]
+  ask box   3  -5   3   0 [ set pcolor sky   ]
+
+  set patches-groen box -14   9  -9  14
+  set patches-rood box  10 -16  16 -10
+;  set patches-sky box  (0 - length-of-left-bar)
+;                0   0   0 and box   3   0  16   0
+
+  ;patches-zwart
+;  ask patches
+;  [
+;    if pcolor = sky [set patches-sky patches-sky + mysel]
+;  ]
+
+
+
+end
+
+to-report box [ left-x left-y right-x right-y ]
+  report patches with [left-x <= pxcor and pxcor <= right-x and
+                       left-y <= pycor and pycor <= right-y ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
