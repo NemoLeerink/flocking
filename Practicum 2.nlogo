@@ -7,14 +7,13 @@ globals [
   field-of-view
   length-of-left-bar
 
-  episode-duratie
-  grid-is-veranderd
+  episode-duratie ; eens in de x aantal ticks worden de afstanden opnieuw berekend
+  grid-is-veranderd ; bool die bijhoudt of er is getekend
 
   patches-groen ; Start positie
   patches-zwart ; Leeg
   patches-sky ; Muren
-  patches-rood ; Het doel
-
+  patches-rood ; Het doel als alle buren ook rood zijn
   bewandelbaar ; De patches die geen muur zijn
 ]
 
@@ -38,24 +37,38 @@ to turtles-maken
   [
     set shape "circle" ;; maakt dat de turtle er uit ziet als een mier
     set color yellow ;; maakt turtle zwart
-    set speed 0.7 + random-float 0.6 ; set speed random-uniform (0.7 * mean-step-size) (1.3 * mean-step-size)
+    set speed (0.7 * mean-step-size) + (random-float 0.6 * mean-step-size); set speed random-uniform (0.7 * mean-step-size) (1.3 * mean-step-size)
     move-to one-of patches-groen
+    face one-of patches-rood ; tijdelijk
   ]
 
   set current-nmr-turtles max-nrm-turtles
 end
 
 to Lopen
-  if grid-is-veranderd [;bereken kortste afstand naar rood
-    set grid-is-veranderd false ]
+  if ticks mod episode-duratie = 0 ; als een episode voorbij is moeten de afstanden opnieuw worden berekend
+  [if grid-is-veranderd [kortste-afstand
+    set grid-is-veranderd false ]]
+
+  let obstakel patches with [pcolor = sky]
 
   ask turtles [
-    ifelse [pcolor] of patch-ahead 1 = sky
-    [back 1]
-    [face one-of patches-rood
-      move-to patch-ahead speed]
+    ifelse [pcolor] of patch-ahead 1 = sky ; any? obstakel in-cone perso;
+    [forward speed / -8]
+    [
+      let dichtstbij min-one-of neighbors [afstand]
+      right 4 * sign subtract-headings (towards dichtstbij) heading
 
-    if pcolor = red
+      carefully [
+        forward speed
+      ] [
+        ; tegen de rand gelopen
+        forward speed / -8
+      ]
+
+    ]
+
+    if pcolor = red and all? neighbors [ pcolor = red ]
     [set current-nmr-turtles current-nmr-turtles - 1
       die]
   ]
@@ -66,17 +79,70 @@ to Lopen
 
 end
 
+to-report sign [x]
+  if x > 0 [report 1]
+  if x < 0 [report -1]
+  if x = 0 [report 0]
+
+end
+
 to teken [c]
   if mouse-down? [
     ask patch mouse-xcor mouse-ycor [
       set pcolor c
     ]
+
+    set patches-groen (patches with [pcolor = green])
+    set patches-rood (patches with [pcolor = red])
+    set patches-zwart (patches with [pcolor = black])
+    set patches-sky (patches with [pcolor = sky])
+    set bewandelbaar (patches with [pcolor != sky])
+
+    set grid-is-veranderd true
   ]
 
-  set patches-groen (patches with [pcolor = green])
-  set patches-rood (patches with [pcolor = red])
-  set patches-zwart (patches with [pcolor = black])
-  set patches-sky (patches with [pcolor = sky])
+end
+
+to kortste-afstand
+
+  let TOO_FAR world-width ^ 2 + world-height ^ 2
+  ; initially, all patches are very distant from the source
+  ask patches [ set afstand TOO_FAR ]
+
+  ; inner red patches have distance zero to goal
+  ask patches-rood with [ all? neighbors [ pcolor = red ] ] [ set afstand 0 ]
+
+  ; do a reversed flood fill to determine, for the rest of the walkable patches,
+  ; the distance to the source
+  loop [
+    ; from patches with unknown shortest distance to goal that have neighbors
+    ; with known shortest distance to goal, it is possible to compute their
+    ; shortest distance to goal.  such patches are called "the front"
+    let front bewandelbaar with [ afstand = TOO_FAR and any? neighbors4 with [ afstand < TOO_FAR ] ]
+    if not any? front [ stop ]
+    ask front [
+      set afstand 1 + min [ afstand ] of neighbors4 with [ afstand < TOO_FAR ]
+    ]
+  ]
+
+  ; onderstaande code had ik geschreven, maar die snippet bleek het efficienter te doen. Ik laat het voor nu nog ff staan
+  ;  let kortste 999 ; niet erg elegant maar werkt wel
+;
+;  ask bewandelbaar [ ; voor alle bewandelbare patches willen we de afstand tot de dichtstbijzijnde patch weten
+;    ask patches-rood [ ;ask patches with [pcolor = red][
+;      let temp manhattan ([pxcor] of myself) ([pycor] of myself) pxcor pycor
+;      if temp < kortste [set kortste temp]
+;    ]
+;
+;    set afstand kortste
+;  ]
+
+end
+
+;; methode wordt wss overbodig
+to-report manhattan [p1x p1y p2x p2y] ;; gebruikt om manhattan afstand tussen twee punten te vinden
+  report abs(p1x - p2x) + abs(p1y - p2y)
+
 end
 
 to defaults
@@ -85,7 +151,7 @@ to defaults
   set collision-radius    1.1
   set field-of-view       1.1
   set length-of-left-bar  7
-  ;
+
   ask box -14   9  -9  14 [ set pcolor green ]
   ask box  10 -16  16 -10 [ set pcolor red   ]
   ask box  (0 - length-of-left-bar)
@@ -97,6 +163,7 @@ to defaults
   set patches-rood (patches with [pcolor = red])
   set patches-zwart (patches with [pcolor = black])
   set patches-sky (patches with [pcolor = sky])
+  set bewandelbaar (patches with [pcolor != sky])
 
 end
 
@@ -106,9 +173,9 @@ to-report box [ left-x left-y right-x right-y ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
+215
 10
-647
+652
 448
 -1
 -1
