@@ -1,19 +1,23 @@
 globals [
+  current-nmr-turtles
+  max-nrm-turtles
+
+  lg ; lopend gemiddelde
+  winnaars ; aantal turtles wat op de rode patches aan komt
+
+  mean-step-size
+  collision-radius
+  field-of-view
   length-of-left-bar
 
   episode-duratie ; eens in de x aantal ticks worden de afstanden opnieuw berekend
   grid-is-veranderd ; bool die bijhoudt of er is getekend
-  sliders-zijn-veranderd ; bool die bijhoudt of de sliders zijn veranderd
 
   patches-groen ; Start positie
   patches-zwart ; Leeg
   patches-sky ; Muren
   patches-rood ; Het doel als alle buren ook rood zijn
   bewandelbaar ; De patches die geen muur zijn
-  lg ; lopend gemiddelde
-  g ; gewonde gemiddelde
-  winnaars ; aantal turtles wat op de rode patches aan komt
-
 ]
 
 turtles-own [speed]
@@ -21,69 +25,96 @@ patches-own [afstand]
 
 to Setup
   clear-all
-  set grid-is-veranderd true ; blokkenformatie op grond is veranderd
-  set sliders-zijn-veranderd true ; sliders zijn veranderd
-  set episode-duratie 200 ; een episode duurt een x aantal ticks
-  if standaard-waarde [defaults]
+
+  set current-nmr-turtles 0
   set lg 0
-  set g 0
   set winnaars 0
-turtles-maken ; zorgt dat de turtles gemaakt worden
+
+  set grid-is-veranderd true ; blokkenformatie op grond is veranderd
+  set episode-duratie 200 ;
+
+  if Standaard-waarde [defaults]
+
   reset-ticks
 
 end
 
 to turtles-maken
-  create-turtles aantal-turtles;; creates turtles
+
+  if (max-nrm-turtles - current-nmr-turtles) > 0
   [
-    set shape "circle" ;; maakt dat de turtle er uit ziet als een cirkel
-    set color yellow ;; maakt turtle geel
-    set speed (0.7 * mean-step-size) + (random-float 0.6 * mean-step-size); bepaald stapgrootte
-    move-to one-of patches-groen ;; beginpositie op groene vlak
-    face one-of patches-rood ; tijdelijk
+    create-turtles max-nrm-turtles - current-nmr-turtles ;; creates turtles
+    [
+      set shape "circle" ;; maakt dat de turtle er uit ziet als een mier
+      set color yellow ;; maakt turtle zwart
+      set speed (0.7 * mean-step-size) + (random-float 0.6 * mean-step-size);
+      move-to one-of patches-groen
+    ]
+    set current-nmr-turtles max-nrm-turtles
   ]
 
+end
 
+to lopendgemiddelde
+  set lg (0.95 * lg + 0.05 * winnaars) ;; berekent lopend gemiddelde
+  set winnaars 0
+end
+
+to sliders-bijwerken
+  set field-of-view fov; field of view
+  set collision-radius collision_radius ; collision radius
+  set mean-step-size mean_step_size ; mean step size
+  set max-nrm-turtles aantal_turtles ; aantal turtles
 end
 
 to Lopen
-  if episode-duratie = 0 ; als een episode voorbij is moeten de afstanden opnieuw worden berekend
-  [if grid-is-veranderd [kortste-afstand
-    set grid-is-veranderd false ]
-    set sliders-zijn-veranderd false
+  if ticks mod episode-duratie = 0 ; als een episode voorbij is moeten de afstanden opnieuw worden berekend
+  [
+    if grid-is-veranderd
+    [
+      set patches-groen (patches with [pcolor = green])
+      set patches-rood (patches with [pcolor = red])
+      set patches-zwart (patches with [pcolor = black])
+      set patches-sky (patches with [pcolor = sky])
+      set bewandelbaar (patches with [pcolor != sky])
+
+      kortste-afstand
+      set grid-is-veranderd false
+    ]
+    sliders-bijwerken
+    lopendgemiddelde
   ]
 
   ask turtles [
-    if any? patches-sky in-cone collision-radius field-of-view ;; als de turltes een muur teken komen ''backup''.
-    [backup true stop]
+    if any? patches-sky in-cone collision-radius field-of-view
+    [backup stop]
 
-    if any? other turtles in-cone collision-radius field-of-view ;; als de turtles een andere turtle binnen de radius hebben ''backup''
-    [backup false stop]
+    if any? other turtles in-cone collision-radius field-of-view
+    [backup stop]
 
     let dichtstbij min-one-of neighbors [afstand]
-    right 2 * sign subtract-headings (towards dichtstbij) heading
+    right 4 * sign subtract-headings (towards dichtstbij) heading
 
     forward speed
 
-    if pcolor = red and all? neighbors [ pcolor = red ] ;; als turtles rode vlak bereiken gaan ze terug naar de groene startpositie
-    [move-to one-of patches-groen]
-    set winnaars winnaars + 1
-    ;;[set aantal-turtles aantal-turtles - 1
-      ;;die]
+    if pcolor = red and all? neighbors [ pcolor = red ]
+    [
+      set current-nmr-turtles current-nmr-turtles - 1
+      set winnaars winnaars + 1
+      die
+    ]
   ]
 
-  ;;turtles-maken
+  turtles-maken
 
   tick
-  set episode-duratie episode-duratie - 1 ; zorgt dat na elke tick de episode-duratie met 1 afneemt zodat deze uiteindelijk op 0 komt.
-  if episode-duratie = 0 [set episode-duratie 200]
 
 end
 
-to backup [d] ; het stapje achteruit
+to backup
   let current-direction heading
 
-  ifelse d
+  ifelse any? patches-sky in-cone collision-radius field-of-view
   [face one-of patches-sky in-cone collision-radius field-of-view]
   [face one-of turtles in-cone collision-radius field-of-view]
 
@@ -103,16 +134,9 @@ to teken [c]
     ask patch mouse-xcor mouse-ycor [
       set pcolor c
     ]
-
-    set patches-groen (patches with [pcolor = green]) ;tekent start positie
-    set patches-rood (patches with [pcolor = red]) ;tekent doel
-    set patches-zwart (patches with [pcolor = black]) ; gumt uit
-    set patches-sky (patches with [pcolor = sky]) ; tekent muur
-    set bewandelbaar (patches with [pcolor != sky])
-
     set grid-is-veranderd true
   ]
-  if aantal-turtles != 150 [set sliders-zijn-veranderd true]
+
 end
 
 to kortste-afstand
@@ -139,19 +163,25 @@ to kortste-afstand
 
 end
 
-to lopendgemiddelde
-  set g winnaars / episode-duratie ; berekent gemiddelde
-  if episode-duratie = 0
-  [set lg 0.95 * lg + 0.05 * winnaars ;;berekent lopend gemiddelde
-  set winnaars 0]
+to bevrijd
+  ask turtles
+  [
+    ;if zit vast
+    move-to one-of (bewandelbaar in-radius 5)
+  ]
 end
 
 to defaults
-  set aantal-turtles     150
+  set max-nrm-turtles     150
   set mean-step-size      0.35
   set collision-radius    1.1
   set field-of-view       180
   set length-of-left-bar  7
+
+  set aantal_turtles      150
+  set mean_step_size      0.35
+  set collision_radius    1.1
+  set fov      180
 
   ask box -14   9  -9  14 [ set pcolor green ]
   ask box  10 -16  16 -10 [ set pcolor red   ]
@@ -252,10 +282,10 @@ NIL
 1
 
 BUTTON
-30
-260
-115
-293
+33
+178
+118
+211
 Teken blauw
 teken sky
 T
@@ -269,10 +299,10 @@ NIL
 1
 
 BUTTON
-30
-225
-115
-258
+33
+143
+118
+176
 Teken groen
 teken green
 T
@@ -286,10 +316,10 @@ NIL
 1
 
 BUTTON
-120
-225
-205
-258
+123
+143
+208
+176
 Teken rood
 teken red
 T
@@ -303,10 +333,10 @@ NIL
 1
 
 BUTTON
-120
-260
-206
-293
+123
+178
+209
+211
 Teken zwart
 teken black
 T
@@ -320,26 +350,26 @@ NIL
 1
 
 SWITCH
-32
-185
-207
-218
+37
+379
+212
+412
 Standaard-waarde
 Standaard-waarde
-0
+1
 1
 -1000
 
 SLIDER
-35
-300
-207
-333
-field-of-view
-field-of-view
+39
+218
+211
+251
+fov
+fov
 0
 360
-180.0
+0.0
 1
 1
 NIL
@@ -357,48 +387,48 @@ NIL
 T
 OBSERVER
 NIL
-NIL
+D
 NIL
 NIL
 1
 
 SLIDER
-35
-340
-207
-373
-collision-radius
-collision-radius
+39
+259
+211
+292
+collision_radius
+collision_radius
 0
 5
-1.1
+0.0
 0.1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-35
-380
-207
-413
-mean-step-size
-mean-step-size
+39
+299
+211
+332
+mean_step_size
+mean_step_size
 0
 1
-0.35
+1.0
 0.01
 1
 NIL
 HORIZONTAL
 
 SLIDER
-35
-420
-207
-453
-aantal-turtles
-aantal-turtles
+39
+339
+211
+372
+aantal_turtles
+aantal_turtles
 0
 150
 150.0
@@ -408,11 +438,11 @@ NIL
 HORIZONTAL
 
 PLOT
-35
-475
-235
-625
-lopende gemiddelde
+660
+10
+860
+160
+Lopend gemiddelde
 NIL
 NIL
 0.0
@@ -426,18 +456,18 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot lg"
 
 BUTTON
-80
-100
-147
-133
-bevrijd
-ask turtles\n[move-to one-of patches with [pcolor != sky]]\n
+140
+98
+210
+132
+Bevrijd
+bevrijd\n
 NIL
 1
 T
 OBSERVER
 NIL
-NIL
+F
 NIL
 NIL
 1
@@ -458,8 +488,6 @@ De gebruiker kan door middel van de tekenbuttons groene, zwarte, rode of blauwe 
 ## THINGS TO NOTICE
 
 In de grafiek is het lopende gemiddelde af te lezen, hierin zie je dus hoe veel turtles het rode vlak halen per aantal ticks. Ook kan de gebruiker het aantal trutles aan passen. 
-
-
 
 @#$#@#$#@
 default
