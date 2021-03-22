@@ -1,20 +1,19 @@
 globals [
-  current-nmr-turtles
-  ;max-nrm-turtles
-
-  ;mean-step-size
-  ;collision-radius
-  ;field-of-view
   length-of-left-bar
 
   episode-duratie ; eens in de x aantal ticks worden de afstanden opnieuw berekend
   grid-is-veranderd ; bool die bijhoudt of er is getekend
+  sliders-zijn-veranderd ; bool die bijhoudt of de sliders zijn veranderd
 
   patches-groen ; Start positie
   patches-zwart ; Leeg
   patches-sky ; Muren
   patches-rood ; Het doel als alle buren ook rood zijn
   bewandelbaar ; De patches die geen muur zijn
+  lg ; lopend gemiddelde
+  g ; gewonde gemiddelde
+  winnaars ; aantal turtles wat op de rode patches aan komt
+
 ]
 
 turtles-own [speed]
@@ -22,38 +21,43 @@ patches-own [afstand]
 
 to Setup
   clear-all
-  set current-nmr-turtles 0
   set grid-is-veranderd true ; blokkenformatie op grond is veranderd
-  set episode-duratie 200 ; voor later belangrijk
+  set sliders-zijn-veranderd true ; sliders zijn veranderd
+  set episode-duratie 200 ; een episode duurt een x aantal ticks
   if standaard-waarde [defaults]
-
+  set lg 0
+  set g 0
+  set winnaars 0
+turtles-maken ; zorgt dat de turtles gemaakt worden
   reset-ticks
 
 end
 
 to turtles-maken
-  create-turtles max-nrm-turtles - current-nmr-turtles;; creates turtles
+  create-turtles aantal-turtles;; creates turtles
   [
-    set shape "circle" ;; maakt dat de turtle er uit ziet als een mier
-    set color yellow ;; maakt turtle zwart
-    set speed (0.7 * mean-step-size) + (random-float 0.6 * mean-step-size); set speed random-uniform (0.7 * mean-step-size) (1.3 * mean-step-size)
-    move-to one-of patches-groen
+    set shape "circle" ;; maakt dat de turtle er uit ziet als een cirkel
+    set color yellow ;; maakt turtle geel
+    set speed (0.7 * mean-step-size) + (random-float 0.6 * mean-step-size); bepaald stapgrootte
+    move-to one-of patches-groen ;; beginpositie op groene vlak
     face one-of patches-rood ; tijdelijk
   ]
 
-  set current-nmr-turtles max-nrm-turtles
+
 end
 
 to Lopen
-  if ticks mod episode-duratie = 0 ; als een episode voorbij is moeten de afstanden opnieuw worden berekend
+  if episode-duratie = 0 ; als een episode voorbij is moeten de afstanden opnieuw worden berekend
   [if grid-is-veranderd [kortste-afstand
-    set grid-is-veranderd false ]]
+    set grid-is-veranderd false ]
+    set sliders-zijn-veranderd false
+  ]
 
   ask turtles [
-    if any? patches-sky in-cone collision-radius field-of-view
+    if any? patches-sky in-cone collision-radius field-of-view ;; als de turltes een muur teken komen ''backup''.
     [backup true stop]
 
-    if any? other turtles in-cone collision-radius field-of-view
+    if any? other turtles in-cone collision-radius field-of-view ;; als de turtles een andere turtle binnen de radius hebben ''backup''
     [backup false stop]
 
     let dichtstbij min-one-of neighbors [afstand]
@@ -61,18 +65,22 @@ to Lopen
 
     forward speed
 
-    if pcolor = red and all? neighbors [ pcolor = red ]
-    [set current-nmr-turtles current-nmr-turtles - 1
-      die]
+    if pcolor = red and all? neighbors [ pcolor = red ] ;; als turtles rode vlak bereiken gaan ze terug naar de groene startpositie
+    [move-to one-of patches-groen]
+    set winnaars winnaars + 1
+    ;;[set aantal-turtles aantal-turtles - 1
+      ;;die]
   ]
 
-  turtles-maken
+  ;;turtles-maken
 
   tick
+  set episode-duratie episode-duratie - 1 ; zorgt dat na elke tick de episode-duratie met 1 afneemt zodat deze uiteindelijk op 0 komt.
+  if episode-duratie = 0 [set episode-duratie 200]
 
 end
 
-to backup [d]
+to backup [d] ; het stapje achteruit
   let current-direction heading
 
   ifelse d
@@ -96,15 +104,15 @@ to teken [c]
       set pcolor c
     ]
 
-    set patches-groen (patches with [pcolor = green])
-    set patches-rood (patches with [pcolor = red])
-    set patches-zwart (patches with [pcolor = black])
-    set patches-sky (patches with [pcolor = sky])
+    set patches-groen (patches with [pcolor = green]) ;tekent start positie
+    set patches-rood (patches with [pcolor = red]) ;tekent doel
+    set patches-zwart (patches with [pcolor = black]) ; gumt uit
+    set patches-sky (patches with [pcolor = sky]) ; tekent muur
     set bewandelbaar (patches with [pcolor != sky])
 
     set grid-is-veranderd true
   ]
-
+  if aantal-turtles != 150 [set sliders-zijn-veranderd true]
 end
 
 to kortste-afstand
@@ -131,14 +139,15 @@ to kortste-afstand
 
 end
 
-;; methode wordt wss overbodig
-to-report manhattan [p1x p1y p2x p2y] ;; gebruikt om manhattan afstand tussen twee punten te vinden
-  report abs(p1x - p2x) + abs(p1y - p2y)
-
+to lopendgemiddelde
+  set g winnaars / episode-duratie
+  if episode-duratie = 0
+  [set lg 0.95 * lg + 0.05 * winnaars
+  set winnaars 0]
 end
 
 to defaults
-  set max-nrm-turtles     1
+  set aantal-turtles     150
   set mean-step-size      0.35
   set collision-radius    1.1
   set field-of-view       180
@@ -388,15 +397,50 @@ SLIDER
 420
 207
 453
-max-nrm-turtles
-max-nrm-turtles
+aantal-turtles
+aantal-turtles
 0
 150
-10.0
+150.0
 1
 1
 NIL
 HORIZONTAL
+
+PLOT
+35
+475
+235
+625
+lopende gemiddelde
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot lg"
+
+BUTTON
+80
+100
+147
+133
+bevrijd
+ask turtles\n[move-to one-of patches with [pcolor != sky]]\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
