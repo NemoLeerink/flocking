@@ -285,10 +285,10 @@ NIL
 1
 
 BUTTON
-33
-178
-118
-211
+35
+160
+120
+193
 Teken blauw
 teken sky
 T
@@ -302,10 +302,10 @@ NIL
 1
 
 BUTTON
-33
-143
-118
-176
+35
+125
+120
+158
 Teken groen
 teken green
 T
@@ -319,10 +319,10 @@ NIL
 1
 
 BUTTON
-123
-143
-208
-176
+125
+125
+210
+158
 Teken rood
 teken red
 T
@@ -336,10 +336,10 @@ NIL
 1
 
 BUTTON
-123
-178
-209
+125
+160
 211
+193
 Teken zwart
 teken black
 T
@@ -353,10 +353,10 @@ NIL
 1
 
 SWITCH
-37
-379
-212
-412
+35
+360
+210
+393
 Standaard-waarde
 Standaard-waarde
 0
@@ -364,10 +364,10 @@ Standaard-waarde
 -1000
 
 SLIDER
-39
-218
-211
-251
+37
+199
+209
+232
 fov
 fov
 0
@@ -396,10 +396,10 @@ NIL
 1
 
 SLIDER
-39
-259
-211
-292
+37
+240
+209
+273
 collision_radius
 collision_radius
 0
@@ -411,10 +411,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-39
-299
-211
-332
+37
+280
+209
+313
 mean_step_size
 mean_step_size
 0
@@ -426,15 +426,15 @@ NIL
 HORIZONTAL
 
 SLIDER
-39
-339
-211
-372
+37
+320
+209
+353
 aantal_turtles
 aantal_turtles
 0
 150
-37.0
+150.0
 1
 1
 NIL
@@ -459,10 +459,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot lg"
 
 BUTTON
-140
-98
-210
-132
+77
+87
+207
+121
 Bevrijd
 bevrijd\n
 NIL
