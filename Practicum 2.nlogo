@@ -3,7 +3,7 @@ globals [
   max-nrm-turtles
 
   lg ; lopend gemiddelde
-  winnaars ; aantal turtles wat op de rode patches aan komt
+  winnaars ; aantal turtles wat op de rode patches aan komt per episode
 
   mean-step-size
   collision-radius
@@ -46,9 +46,9 @@ to turtles-maken
     create-turtles max-nrm-turtles - current-nmr-turtles ;; creates turtles
     [
       set shape "circle" ;; maakt dat de turtle er uit ziet als een mier
-      set color yellow ;; maakt turtle zwart
+      set color yellow ;; maakt turtle geel
       set speed (0.7 * mean-step-size) + (random-float 0.6 * mean-step-size);
-      move-to one-of patches-groen
+      move-to one-of patches-groen  ;; beginpositie op groene vlak
     ]
     set current-nmr-turtles max-nrm-turtles
   ]
@@ -86,17 +86,19 @@ to Lopen
   ]
 
   ask turtles [
-    if any? patches-sky in-cone collision-radius field-of-view
+    if any? patches-sky in-cone collision-radius field-of-view  ;; als de turltes een muur teken komen ''backup''.
     [backup stop]
 
-    if any? other turtles in-cone collision-radius field-of-view
+    if any? other turtles in-cone collision-radius field-of-view ;; als de turtles een andere turtle binnen de radius hebben ''backup''
     [backup stop]
 
+    ; zoek kortste pad en draai naar die richting
     let dichtstbij min-one-of neighbors [afstand]
     right 4 * sign subtract-headings (towards dichtstbij) heading
 
     forward speed
 
+    ; turtle is op zijn doel
     if pcolor = red and all? neighbors [ pcolor = red ]
     [
       set current-nmr-turtles current-nmr-turtles - 1
@@ -105,12 +107,14 @@ to Lopen
     ]
   ]
 
+  ; vul aantal turtles weer aan
   turtles-maken
 
   tick
 
 end
 
+; stapje terug
 to backup
   let current-direction heading
 
@@ -163,6 +167,7 @@ to kortste-afstand
 
 end
 
+; zet de turtles op een bewandelbare patch dichtbij, zodat de turtle niet meer vast zit
 to bevrijd
   ask turtles
   [
@@ -490,7 +495,7 @@ De gebruiker kan door middel van de tekenbuttons groene, zwarte, rode of blauwe 
 
 ## THINGS TO NOTICE
 
-In de grafiek is het lopende gemiddelde af te lezen, hierin zie je dus hoe veel turtles het rode vlak halen per aantal ticks. Ook kan de gebruiker het aantal trutles aan passen. 
+In de grafiek is het lopende gemiddelde af te lezen, hierin zie je dus hoe veel turtles het rode vlak halen per episode. Ook kan de gebruiker het aantal trutles aan passen. 
 @#$#@#$#@
 default
 true
