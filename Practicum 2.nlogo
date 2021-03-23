@@ -166,8 +166,11 @@ end
 to bevrijd
   ask turtles
   [
-    ;if zit vast
-    move-to one-of (bewandelbaar in-radius 5)
+    if any? patches-sky in-cone collision-radius field-of-view or
+    any? other turtles in-cone collision-radius field-of-view
+    [
+      move-to min-one-of bewandelbaar with [pxcor != [pxcor] of myself or pycor != [pycor] of myself] [distance myself]
+    ]
   ]
 end
 
@@ -356,7 +359,7 @@ SWITCH
 412
 Standaard-waarde
 Standaard-waarde
-1
+0
 1
 -1000
 
@@ -369,7 +372,7 @@ fov
 fov
 0
 360
-0.0
+180.0
 1
 1
 NIL
@@ -401,7 +404,7 @@ collision_radius
 collision_radius
 0
 5
-0.0
+1.1
 0.1
 1
 NIL
@@ -416,7 +419,7 @@ mean_step_size
 mean_step_size
 0
 1
-1.0
+0.35
 0.01
 1
 NIL
@@ -431,7 +434,7 @@ aantal_turtles
 aantal_turtles
 0
 150
-150.0
+37.0
 1
 1
 NIL
@@ -488,7 +491,6 @@ De gebruiker kan door middel van de tekenbuttons groene, zwarte, rode of blauwe 
 ## THINGS TO NOTICE
 
 In de grafiek is het lopende gemiddelde af te lezen, hierin zie je dus hoe veel turtles het rode vlak halen per aantal ticks. Ook kan de gebruiker het aantal trutles aan passen. 
-
 @#$#@#$#@
 default
 true
